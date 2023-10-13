@@ -82,7 +82,7 @@ class SearchViewCollectionViewCell: UICollectionViewCell {
     
     //MARK: - Config Content
     func configContent(currentWeatherDTO:CurrentWeatherDTO){
-        self.tempLabel.text = currentWeatherDTO.temp
+        self.tempLabel.text = currentWeatherDTO.temp.appending("c")
 //        self.imageview.kf.setImage(with: URL(string: currentWeatherDTO.getURL()))
         let getImgName = currentWeatherDTO.icon
         self.imageview.image = UIImage(named: getImage(icon: getImgName))

@@ -30,7 +30,7 @@
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Rwx-gz-JEN" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="My Location" image="ic_location_on_48px 2" selectedImage="ic_location_on_48px 2" id="gYw-xO-h5j"/>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="E48-Ra-7BD">
+                    <navigationBar key="navigationBar" hidden="YES" contentMode="scaleToFill" id="E48-Ra-7BD">
                         <rect key="frame" x="0.0" y="59" width="393" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>

@@ -44,7 +44,7 @@ class ForecastCollectionViewCell: UICollectionViewCell {
         
         dateLabel.font = .robotoSlabMedium(size: 14)
         timeLabel.font = .robotoSlabLight(size: 13)
-        tempLabel.font = .robotoSlabLight(size: 36)
+        tempLabel.font = .robotoSlabMedium(size: 36)
         
         self.addSubview(dateLabel)
         self.addSubview(timeLabel)

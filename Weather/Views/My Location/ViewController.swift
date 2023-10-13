@@ -14,7 +14,7 @@ class ViewController: UIViewController {
     //MARK: - Properties, View Models
     private var currentWeatherVM = CurrentWeatherVM()
     private var forecastWeatherVM = ForecastWeatherVM()
-    
+        
     //MARK: - UI Components
     private var topCollectionView: UICollectionView!
     private var namelabel: UILabel!
@@ -53,6 +53,7 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         self.tabBarController?.tabBar.isHidden = false
+        self.navigationController?.navigationBar.isHidden = true
     }
     
     //MARK: - UISetup
@@ -295,8 +296,6 @@ class ViewController: UIViewController {
         viewReportBtn.layer.shadowOpacity = 1
         viewReportBtn.layer.shadowRadius = 4
         viewReportBtn.layer.shadowOffset = CGSize(width: 0, height: 5)
-
-        
         viewReportBtn.addTarget(self, action: #selector(ViewController.viewReportButtonTapped), for: .touchUpInside)
         
         view.addSubview(viewReportBtn)
@@ -324,13 +323,13 @@ class ViewController: UIViewController {
         bottomCollectionView.showsHorizontalScrollIndicator = false
         bottomCollectionView.register(HourlyCollectionViewCell.self, forCellWithReuseIdentifier: HourlyCollectionViewCell.identifire)
         
-
         self.view.addSubview(bottomCollectionView)
         
         NSLayoutConstraint.activate([
             bottomCollectionView.topAnchor.constraint(equalTo: dayLabel.bottomAnchor,constant: 24),
             bottomCollectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             bottomCollectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+//            bottomCollectionView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: -158),
             bottomCollectionView.heightAnchor.constraint(equalToConstant: 85),
         ])
     }
@@ -440,7 +439,6 @@ extension ViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
     }
-    
     
 }
 
