@@ -9,13 +9,11 @@ import UIKit
 
 class InfoCollectionViewCell: UICollectionViewCell {
     
-    static let identifire = "InfoCollectionViewCell"
+    static let identifire = InfoCollectionViewCell.description()
     
-    //  MARK: - UIComponent
     private var weatherTypeImageView : UIImageView = UIImageView()
     private var weatherType : UILabel  = UILabel()
     
-    // MARK: - Intializers
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -25,14 +23,13 @@ class InfoCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - UISetup
     private func setupUI(){
         setUpWeatherTypeImageView()
         setUpweatherType()
         
     }
     private func setUpWeatherTypeImageView(){
-        weatherTypeImageView.image = UIImage(named: "Zaps")
+        weatherTypeImageView.image = UIImage(named: "")
         weatherTypeImageView.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(weatherTypeImageView)
         weatherTypeImageView.layer.masksToBounds = false
@@ -70,7 +67,6 @@ class InfoCollectionViewCell: UICollectionViewCell {
         ])
     }
     
-    //MARK: - Cell Config
     func configContent(weatherType:String,weatherTypeImageName:String){
         self.weatherTypeImageView.image = UIImage(named: weatherTypeImageName)
         self.weatherType.text = weatherType

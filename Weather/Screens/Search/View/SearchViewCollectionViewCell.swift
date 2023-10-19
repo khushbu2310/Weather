@@ -11,14 +11,11 @@ class SearchViewCollectionViewCell: UICollectionViewCell {
     
     static let identifire = SearchViewCollectionViewCell.description()
     
-    //MARK: - Components
     private var tempLabel : UILabel = labelUI(text: "30c", textColor: .black)
     private var imageview : UIImageView = UIImageView()
     private var weatherTypeLabel : UILabel = labelUI(text: "Rain", textColor: .black)
     private var cityNameLabel : UILabel = labelUI(text: "Chikhli", textColor: .black)
     
-    
-    //MARK: - Intializers
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = .systemBackground
@@ -34,10 +31,8 @@ class SearchViewCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    //MARK: - UISetup
     private func setupUI(){
         imageview.translatesAutoresizingMaskIntoConstraints = false
-        imageview.image = UIImage(named: "Zaps")
         imageview.layer.masksToBounds = false
         imageview.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
         imageview.layer.shadowOpacity = 1
@@ -68,7 +63,6 @@ class SearchViewCollectionViewCell: UICollectionViewCell {
             imageview.heightAnchor.constraint(equalToConstant: 80),
             imageview.widthAnchor.constraint(equalToConstant: 80),
             
-            
             weatherTypeLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             weatherTypeLabel.topAnchor.constraint(equalTo: imageview.bottomAnchor, constant: 0),
             weatherTypeLabel.heightAnchor.constraint(equalToConstant: 24),
@@ -80,13 +74,15 @@ class SearchViewCollectionViewCell: UICollectionViewCell {
         ])
     }
     
-    //MARK: - Config Content
-    func configContent(currentWeatherDTO:CurrentWeatherDTO){
-        self.tempLabel.text = currentWeatherDTO.temp.appending("c")
-        //        self.imageview.kf.setImage(with: URL(string: currentWeatherDTO.getURL()))
+    func configContent(currentWeatherDTO:CurrentWeatherDTO, cellBGC:UIColor, cellTextColor:UIColor){
+        self.backgroundColor = cellBGC
+        tempLabel.text = currentWeatherDTO.temp
+        tempLabel.textColor = cellTextColor
         let getImgName = currentWeatherDTO.icon
-        self.imageview.image = UIImage(named: getImage(icon: getImgName))
-        self.weatherTypeLabel.text = currentWeatherDTO.weatherType
-        self.cityNameLabel.text = currentWeatherDTO.city
+        imageview.image = UIImage(named: getImage(icon: getImgName))
+        weatherTypeLabel.text = currentWeatherDTO.weatherType
+        weatherTypeLabel.textColor = cellTextColor
+        cityNameLabel.text = currentWeatherDTO.city
+        cityNameLabel.textColor = cellTextColor
     }
 }

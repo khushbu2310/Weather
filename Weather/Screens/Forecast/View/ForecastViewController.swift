@@ -10,12 +10,19 @@ import UIKit
 
 class ForecastViewController: UIViewController {
     
-    //MARK: - UIComponent
     private var topLabel : UILabel!
     private var reportCollectionView : UICollectionView!
     private var foreCastData : [Int:[ForecastDTO]] = [:]
     
-    //MARK: - Intializers
+    init(_foreCastData: [Int:[ForecastDTO]] = [:]){
+        foreCastData  =  _foreCastData
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor(hex: "#828CAE")
@@ -25,8 +32,7 @@ class ForecastViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.navigationBar.isHidden = false
     }
-    
-    //MARK: - UI Setup
+
     private func setupUI(){
         setupTopLabel()
         setupReportCollectionView()
@@ -67,7 +73,9 @@ class ForecastViewController: UIViewController {
         reportCollectionView.delegate = self
         reportCollectionView.dataSource = self
         reportCollectionView.showsHorizontalScrollIndicator = false
-        reportCollectionView.register(ForecastCollectionViewCell.self, forCellWithReuseIdentifier: ForecastCollectionViewCell.identifier)
+        reportCollectionView.register(ForecastCollectionViewCell.self, forCellWithReuseIdentifier: ForecastCollectionViewCell.identifire)
+        reportCollectionView.register(ForecastCollectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ForecastCollectionHeaderView.identifire)
+
         self.view.addSubview(reportCollectionView)
         
         NSLayoutConstraint.activate([
@@ -78,32 +86,61 @@ class ForecastViewController: UIViewController {
         ])
     }
     
-    //MARK: - Config Content
     func configContent(forecastData: [Int: [ForecastDTO]]) {
         self.foreCastData = forecastData
     }
 }
 
-//MARK: - CollectionView Delegate
-extension ForecastViewController: UICollectionViewDelegate {
-}
-
 //MARK: - CollectionView Datasource
 extension ForecastViewController: UICollectionViewDataSource {
+    
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return foreCastData.count
     }
+    func collectionView(_ collectionView: UICollectionView,
+                        numberOfItemsInSection section: Int) -> Int {
+        return (foreCastData[section]?.count ?? 0)
+    }
+    func collectionView(_ collectionView: UICollectionView,
+                        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ForecastCollectionViewCell.identifire, for: indexPath) as? ForecastCollectionViewCell else{
+            return UICollectionViewCell()
+        }
+        cell.congifContent(forecastDTO: foreCastData[indexPath.section]![indexPath.row])
+        return cell
+    }
+}
+
+//  MARK: - CollectionViewDelegateFlowLayout
+extension ForecastViewController: UICollectionViewDelegateFlowLayout {
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return foreCastData[section]?.count ?? 0
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: 200, height: 50)
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ForecastCollectionViewCell.identifier, for: indexPath) as? ForecastCollectionViewCell
-        if let cell = cell {
-            cell.congifContent(forecastDTO: foreCastData[indexPath.section]![indexPath.row])
-            return cell
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 0, left: 0, bottom: 20, right: 0)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        viewForSupplementaryElementOfKind kind: String,
+                        at indexPath: IndexPath) -> UICollectionReusableView {
+        
+        switch kind {
+        case UICollectionView.elementKindSectionHeader:
+            guard let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: ForecastCollectionHeaderView.identifire, for: indexPath) as?
+                    ForecastCollectionHeaderView else {
+                return UICollectionReusableView()
+            }
+            headerView.configContent(day: String(foreCastData[indexPath.section]?.first?.date ??  "Next Day"))
+            return headerView
+        default:  return UICollectionReusableView()
+            
         }
-        return UICollectionViewCell()
     }
 }

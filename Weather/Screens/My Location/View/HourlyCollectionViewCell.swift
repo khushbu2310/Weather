@@ -9,15 +9,13 @@ import UIKit
 
 class HourlyCollectionViewCell: UICollectionViewCell {
     
-    static let identifire = "HourlyCollectionViewCell"
+    static let identifire = HourlyCollectionViewCell.description()
     
-    //  MARK: - UIComponent
     private var hrStack: UIStackView!
     private var weatherImgView: UIImageView = UIImageView(frame: .zero)
     private var timeLabel: UILabel = labelUI(text: "10:00am", textColor: .white)
     private var tempLabel: UILabel = labelUI(text: "24c", textColor: .white)
     
-    //  MARK: - Intializers
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = UIColor(red: 0.656, green: 0.706, blue: 0.879, alpha: 1)
@@ -35,7 +33,6 @@ class HourlyCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    //  MARK: - UISetup
     private func setupUI(){
         let verticalView = UIView()
         verticalView.translatesAutoresizingMaskIntoConstraints = false
@@ -79,12 +76,13 @@ class HourlyCollectionViewCell: UICollectionViewCell {
         ])
     }
     
-    //MARK: - Cell Config
-    func configContent(forecastDTO:ForecastDTO){
-        //        self.weatherImgView.kf.setImage(with: forecastDTO.getURL())
+    func configContent(forecastDTO:ForecastDTO, textColor: UIColor, cellBGColor: UIColor){
+        self.backgroundColor = cellBGColor
         let getImgName = forecastDTO.icon
-        self.weatherImgView.image = UIImage(named: getImage(icon: getImgName))
-        self.timeLabel.text = forecastDTO.time
-        self.tempLabel.text = forecastDTO.temp
+        weatherImgView.image = UIImage(named: getImage(icon: getImgName))
+        timeLabel.text = forecastDTO.time
+        tempLabel.text = forecastDTO.temp
+        timeLabel.textColor = textColor
+        tempLabel.textColor = textColor
     }
 }

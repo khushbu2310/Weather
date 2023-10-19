@@ -7,15 +7,28 @@
 
 import UIKit
 import CoreLocation
-import Kingfisher
 
-class HomeViewController: UIViewController, CLLocationManagerDelegate {
+class HomeViewController: UIViewController {
     
-    //MARK: - Properties, View Models
-    private var currentWeatherVM = CurrentWeatherVM()
-    private var forecastWeatherVM = ForecastWeatherVM()
+    private var currentWeatherVM: CurrentWeatherVM = CurrentWeatherVM()
+    private var forecastWeatherVM: ForecastWeatherVM = ForecastWeatherVM()
+    private var locationManager: CLLocationManager = CLLocationManager()
         
-    //MARK: - UI Components
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.view.backgroundColor = UIColor(hex: "#828CAE")
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
+        setupUI()
+        currentWeatherVMObserver()
+        forecastVMObserver()
+                        
+        NotificationCenter.default.addObserver(self, selector:#selector(dataPassSuccess(_:)), name: NSNotification.Name ("LocationSelected"), object: nil)
+        
+    }
+  
     private var topCollectionView: UICollectionView!
     private var namelabel: UILabel!
     private var dateLabel: UILabel!
@@ -38,36 +51,7 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
     private var stack3: UIStackView!
     private var mainStack: UIStackView!
     
-    //MARK: - Initializers
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.view.backgroundColor = UIColor(hex: "#828CAE")
-        currentWeatherVM.locationManager.delegate = self
-        
-        setupUI()
-        currentWeatherVMObserver()
-        forecastVMObserver()
-        currentWeatherVM.getCurrentWeather(location: self.currentWeatherVM.currentLocation)
-        forecastWeatherVM.getForeCast(location: self.currentWeatherVM.currentLocation)
-        
-        NotificationCenter.default.addObserver(self, selector:#selector(dataPassSuccess(_:)), name: NSNotification.Name ("LocationSelected"), object: nil)
-        
-    }
-    
-    //MARK: - Data Passing from Search
-    @objc func dataPassSuccess(_ notification: Notification){
-        let data = notification.object! as! CurrentWeatherDTO
-        self.configDataFromSearchVC(data: data)
-//        self.forecastWeatherVM.getForeCast(location: Location(lat: data.lat , lon: data.lon))
-    }
-
-    
-    override func viewWillAppear(_ animated: Bool) {
-        self.tabBarController?.tabBar.isHidden = false
-        self.navigationController?.navigationBar.isHidden = true
-    }
-    
-    //MARK: - UISetup
+  
     private func setupUI() {
         setupActivityIndicator()
         topCollectionViewUISetup()
@@ -81,17 +65,6 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
         setupBottomCollectionView()
     }
     
-    func setupActivityIndicator() {
-        activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.hidesWhenStopped = true
-        view.addSubview(activityIndicator)
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-    }
-    
     private func topCollectionViewUISetup() {
         let topCollectionLayout = UICollectionViewFlowLayout()
         topCollectionLayout.scrollDirection = .horizontal
@@ -102,7 +75,6 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
         topCollectionView = UICollectionView(frame: .zero, collectionViewLayout: topCollectionLayout)
         topCollectionView.translatesAutoresizingMaskIntoConstraints = false
         topCollectionView.backgroundColor = UIColor(hex: "#7882A7")
-        topCollectionView.delegate = self
         topCollectionView.dataSource = self
         topCollectionView.showsHorizontalScrollIndicator = false
         topCollectionView.register(InfoCollectionViewCell.self, forCellWithReuseIdentifier: InfoCollectionViewCell.identifire)
@@ -111,7 +83,6 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
         topCollectionView.layer.shadowOpacity = 1
         topCollectionView.layer.shadowRadius = 4
         topCollectionView.layer.shadowOffset = CGSize(width: 0, height: 5)
-        
         
         self.view.addSubview(topCollectionView)
         
@@ -329,7 +300,6 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
         bottomCollectionView = UICollectionView(frame: .zero, collectionViewLayout: bottomCollectionLayout)
         bottomCollectionView.translatesAutoresizingMaskIntoConstraints = false
         bottomCollectionView.backgroundColor = UIColor(red: 0.51, green: 0.549, blue: 0.682, alpha: 1)
-        bottomCollectionView.delegate = self
         bottomCollectionView.dataSource = self
         bottomCollectionView.showsHorizontalScrollIndicator = false
         bottomCollectionView.register(HourlyCollectionViewCell.self, forCellWithReuseIdentifier: HourlyCollectionViewCell.identifire)
@@ -344,45 +314,61 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
         ])
     }
     
-    //MARK: - Config Content
+    func setupActivityIndicator() {
+        activityIndicator = UIActivityIndicatorView(style: .large)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.hidesWhenStopped = true
+        view.addSubview(activityIndicator)
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+    
+    @objc func dataPassSuccess(_ notification: Notification){
+        let data = notification.object! as! CurrentWeatherDTO
+        self.forecastWeatherVM.getForeCast(location: LocationModel(lat: data.lat, lon: data.lon))
+        self.configDataFromSearchVC(data: data)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        self.tabBarController?.tabBar.isHidden = false
+        self.navigationController?.navigationBar.isHidden = true
+    }
+    
     private func currentWeatherVMObserver() {
         currentWeatherVM.eventHandler = { [weak self] event in
-            switch event {
-            case .loading: DispatchQueue.main.async { self?.activityIndicator.startAnimating() }
-            case .stopLoading: DispatchQueue.main.async { self?.activityIndicator.stopAnimating() }
-            case .dataLoaded: DispatchQueue.main.async { self?.configCurrentWeatherContent() }
-            case .error(let error): DispatchQueue.main.async { self?.showToast(message: error?.localizedDescription ?? "", font: .boldSystemFont(ofSize: 15))}
+            DispatchQueue.main.async {
+                switch event {
+                case .loading: self?.activityIndicator.startAnimating()
+                case .stopLoading: self?.activityIndicator.stopAnimating()
+                case .dataLoaded: self?.configCurrentWeatherContent()
+                    case .error : self?.showAlert(title: "Server Error", message: "Try again after some time")
+                }
             }
         }
     }
     
     private func forecastVMObserver() {
         forecastWeatherVM.eventHandler = { [weak self] event in
-            switch event {
-            case .loading: DispatchQueue.main.async {
-                self?.activityIndicator.startAnimating()
-            }
-            case .stopLoading: DispatchQueue.main.async {
-                self?.activityIndicator.stopAnimating()
-            }
-            case .dataLoaded: DispatchQueue.main.async {
-                self?.configForecastContent()
-            }
-            case .error(let error): DispatchQueue.main.async {
-                self?.showToast(message: error?.localizedDescription ?? "", font: .boldSystemFont(ofSize: 15))
-            }
+            DispatchQueue.main.async {
+                switch event {
+                case .loading: self?.activityIndicator.startAnimating()
+                case .stopLoading: self?.activityIndicator.stopAnimating()
+                case .dataLoaded: self?.configForecastContent()
+                case .error : self?.showAlert(title: "Server Error", message: "Try again after some time")
+                }
+
             }
         }
     }
     
     private func configCurrentWeatherContent() {
         self.namelabel.text = currentWeatherVM.currentWeatherDTO?.city
-        self.tempMainLabel.text = currentWeatherVM.currentWeatherDTO?.temp.appending(" c")
-        self.windValue.text = currentWeatherVM.currentWeatherDTO?.wind.appending("km/h")
-        self.humidityValue.text = currentWeatherVM.currentWeatherDTO?.humidity.appending("%") ?? "" + "%"
-        self.tempValue.text = currentWeatherVM.currentWeatherDTO?.temp.appending("c")
-        self.weatherImgView.image = UIImage(named: currentWeatherVM.currentWeatherDTO?.weatherType ?? "ClearSky")
-        //        self.weatherImgView.kf.setImage(with: URL(string: (currentWeatherVM.currentWeatherDTO?.getURL())!))
+        self.tempMainLabel.text = currentWeatherVM.currentWeatherDTO?.temp
+        self.windValue.text = currentWeatherVM.currentWeatherDTO?.wind
+        self.humidityValue.text = currentWeatherVM.currentWeatherDTO?.humidity
+        self.tempValue.text = currentWeatherVM.currentWeatherDTO?.temp
         let getImgName = currentWeatherVM.currentWeatherDTO?.icon
         self.weatherImgView.image = UIImage(named: getImage(icon: getImgName!))
         self.dateLabel.text = currentWeatherVM.currentWeatherDTO?.date
@@ -392,15 +378,14 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
         self.bottomCollectionView.reloadData()
     }
         
-    //MARK: - ConfigDataFromSearch
     func configDataFromSearchVC(data: CurrentWeatherDTO){
         DispatchQueue.main.async {
             self.namelabel.text = data.city
             self.dateLabel.text = data.date
-            self.tempMainLabel.text = data.temp.appending(" C")
-            self.windValue.text = data.wind.appending("km/h")
-            self.humidityValue.text = data.humidity.appending("%")
-            self.tempValue.text = data.temp.appending("c")
+            self.tempMainLabel.text = data.temp
+            self.windValue.text = data.wind
+            self.humidityValue.text = data.humidity
+            self.tempValue.text = data.temp
             let getImgName = data.icon
             self.weatherImgView.image = UIImage(named: getImage(icon: getImgName))
             self.dateLabel.text = data.date
@@ -410,17 +395,11 @@ class HomeViewController: UIViewController, CLLocationManagerDelegate {
     
     @objc func viewReportButtonTapped() {
         let fcVC = ForecastViewController()
-        fcVC.configContent(forecastData: forecastWeatherVM.nextFourDaysForecast)
+        fcVC.configContent(forecastData: forecastWeatherVM.getNextFourDaysForcast())
         self.navigationController?.pushViewController(fcVC, animated: true)
         self.tabBarController?.tabBar.isHidden = true
     }
 }
-
-//MARK: - CollectionView Delegate
-extension HomeViewController: UICollectionViewDelegate {
-    
-}
-
 
 //MARK: - CollectionView DataSource
 extension HomeViewController: UICollectionViewDataSource {
@@ -429,7 +408,7 @@ extension HomeViewController: UICollectionViewDataSource {
         case self.topCollectionView:
             return currentWeatherVM.topCollectionViewData.count
         case self.bottomCollectionView:
-            return forecastWeatherVM.todayForecast.count
+            return forecastWeatherVM.forecastData[0]?.count ?? 0
         default:
             return 0
         }
@@ -438,49 +417,41 @@ extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         switch collectionView {
         case self.topCollectionView:
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InfoCollectionViewCell.identifire, for: indexPath) as? InfoCollectionViewCell
-            if let cell = cell {
-                cell.configContent(weatherType: currentWeatherVM.topCollectionViewData[indexPath.row].0, weatherTypeImageName: currentWeatherVM.topCollectionViewData[indexPath.row].1)
-                return cell
-            }
-            return UICollectionViewCell()
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: InfoCollectionViewCell.identifire, for: indexPath) as? InfoCollectionViewCell else { return UICollectionViewCell() }
+            cell.configContent(weatherType: currentWeatherVM.topCollectionViewData[indexPath.row].0, weatherTypeImageName: currentWeatherVM.topCollectionViewData[indexPath.row].1)
+            return cell
             
         case self.bottomCollectionView:
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HourlyCollectionViewCell.identifire, for: indexPath) as? HourlyCollectionViewCell
-            if let cell = cell {
-                cell.configContent(forecastDTO: forecastWeatherVM.todayForecast[indexPath.row])
-                return cell
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HourlyCollectionViewCell.identifire, for: indexPath) as? HourlyCollectionViewCell else { return UICollectionViewCell() }
+            
+            switch (indexPath.row%2) {
+            case 0 : cell.configContent(forecastDTO: forecastWeatherVM.forecastData[0]![indexPath.row],
+                                        textColor: .white,
+                                        cellBGColor: ColorConstant.lightBlue)
+                
+            case 1 :cell.configContent(forecastDTO: forecastWeatherVM.forecastData[0]![indexPath.row],
+                                       textColor: ColorConstant.black,
+                                       cellBGColor: ColorConstant.frontWhite)
+            default : break
+                
             }
-            return UICollectionViewCell()
-        default:
-            return UICollectionViewCell()
+            return cell
+        
+        default: return UICollectionViewCell()
         }
     }
-    
 }
 
-//  MARK: - Show Tost
-extension HomeViewController {
-    
-    func showToast(message : String, font: UIFont) {
-        let toastLabel = UILabel(frame: CGRect(x: 10, y: 250, width: view.frame.width-30, height: 80))
-        toastLabel.backgroundColor = UIColor(red: 0.656, green: 0.706, blue: 0.879, alpha: 1)
-        toastLabel.textColor = UIColor.white
-        toastLabel.font = font
-        toastLabel.textAlignment = .center;
-        toastLabel.text = message
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 10;
-        toastLabel.clipsToBounds  =  true
-        toastLabel.numberOfLines = 0
-        self.view.addSubview(toastLabel)
-        UIView.animate(withDuration: 4.0, delay: 0.1, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
+//MARK: - CLLocationManager Delegate
+extension HomeViewController : CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let lat = locations.first?.coordinate.latitude
+        let lon = locations.first?.coordinate.longitude
+        currentWeatherVM.currentLocation = LocationModel(lat: String(lat!), lon: String(lon!))
+        locationManager.stopUpdatingLocation()
+        currentWeatherVM.getCurrentWeather(location: currentWeatherVM.currentLocation)
+        forecastWeatherVM.getForeCast(location: currentWeatherVM.currentLocation)
     }
 }
-
 
 

@@ -38,7 +38,7 @@ class MockWeatherAPI: Repository {
                 temp: String(weatherResult.main.temp),
                 humidity: String(weatherResult.main.humidity),
                 wind: String(weatherResult.wind.speed),
-                icon:weatherResult.weather.first?.icon ?? "01d",
+                icon: weatherResult.weather.first?.icon ?? "01d",
                 lat: String(weatherResult.coord.lat),
                 lon: String(weatherResult.coord.lon))
             return currentWeatherDTO
@@ -48,33 +48,33 @@ class MockWeatherAPI: Repository {
         }
     }
     
-    func forecast() -> [Int:[ForecastDTO]]? {
+    func forecast() -> [Int: [ForecastDTO]]? {
         do {
             guard let forecastData = forecastData else {
                 return nil
             }
-            let apiResponce =  try JSONDecoder().decode(FiveDaysForecastModel.self, from: forecastData)
-            var responce : [Int:[ForecastDTO]] = [:]
+            let apiResponse =  try JSONDecoder().decode(FiveDaysForecastModel.self, from: forecastData)
+            var response: [Int: [ForecastDTO]] = [:]
             
-            apiResponce.list.forEach { data in
+            apiResponse.list.forEach { data in
                 
                 let index = getKey(day: data.dtTxt)
                 let tempDTO = (ForecastDTO(weatherType: data.weather.first?.main ?? "ClearSky", date: data.dtTxt, temp: data.main.temp ,icon:data.weather.first?.icon ?? "01") )
-                if (responce.keys.contains(index) == true) {
-                    responce[index]?.append(tempDTO)
+                if (response.keys.contains(index) == true) {
+                    response[index]?.append(tempDTO)
                 }
                 else{
-                    responce.updateValue([tempDTO], forKey: index)
+                    response.updateValue([tempDTO], forKey: index)
                 }
             }
-            return responce
+            return response
             
         }catch {
             return nil
         }
     }
     
-    private func getKey(day:String)->Int {
+    private func getKey(day: String) -> Int {
         
         var calender = Calendar.current
         let timzone = TimeZone.current
@@ -95,7 +95,6 @@ class MockWeatherAPI: Repository {
         
         let d1 = DateToString.string(from: fromDate)
         let d2 = DateToString.string(from: toDate)
-        
         let v1 = DateToString.date(from: d1)!
         let v2 = DateToString.date(from: d2)!
         

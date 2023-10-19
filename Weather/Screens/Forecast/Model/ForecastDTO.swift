@@ -18,8 +18,8 @@ struct ForecastDTO {
     let temp: String
     let icon: String
     
-    init(weatherType:String, date:String, temp:Double, icon:String) {
-        self.temp = String(temp).appending("c")
+    init(weatherType: String, date: String, temp: Double, icon: String) {
+        self.temp = String(temp)
         self.time = getTime(date: date)
         self.weatherType = weatherType
         self.icon = icon

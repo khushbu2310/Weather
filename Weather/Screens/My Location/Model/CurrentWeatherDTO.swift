@@ -19,15 +19,15 @@ struct CurrentWeatherDTO {
     let lon: String
     
     init(weatherType: String, city: String, temp: String, humidity: String, wind: String, icon: String, lat: String, lon: String) {
-        self.weatherType = weatherType
         self.city = city
-        self.date = todaysDate()
-        self.temp = temp
-        self.humidity = humidity
-        self.wind = wind
+        self.date = Date.now.toMediumStyle()
+        self.temp = temp + "c"
+        self.humidity = humidity + "%"
+        self.wind = wind + "km/h"
+        self.weatherType = weatherType
         self.icon = icon
         self.lat = lat
         self.lon = lon
-    }
+        }
 }
 

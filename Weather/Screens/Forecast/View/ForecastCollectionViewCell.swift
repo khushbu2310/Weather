@@ -9,15 +9,12 @@ import UIKit
 
 class ForecastCollectionViewCell: UICollectionViewCell {
     
-    static let identifier = ForecastCollectionViewCell.description()
+    static let identifire = ForecastCollectionViewCell.description()
     
-    //MARK: - Properties
-    private var dateLabel: UILabel = labelUI(text: "July 21, 2022", textColor: .white)
     private var timeLabel: UILabel = labelUI(text: "10:00am", textColor: .white)
     private var tempLabel: UILabel = labelUI(text: "24c", textColor: .white)
     private var weatherTypeImageView : UIImageView = UIImageView()
     
-    //MARK: - Intializers
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = UIColor(hex: "#828CAE")
@@ -34,31 +31,21 @@ class ForecastCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    //    MARK: - UISetup
     private func setupUI(){
         weatherTypeImageView.translatesAutoresizingMaskIntoConstraints = false
-        
-        dateLabel.textAlignment = .center
-        timeLabel.textAlignment = .center
-        tempLabel.textAlignment = .center
-        
-        dateLabel.font = .robotoSlabMedium(size: 14)
-        timeLabel.font = .robotoSlabLight(size: 13)
+
+        timeLabel.font = .robotoSlabMedium(size: 16)
         tempLabel.font = .robotoSlabMedium(size: 36)
         
-        self.addSubview(dateLabel)
         self.addSubview(timeLabel)
         self.addSubview(tempLabel)
         self.addSubview(weatherTypeImageView)
         
         NSLayoutConstraint.activate([
-            dateLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor, constant: -110),
-            dateLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: -10),
-            dateLabel.heightAnchor.constraint(equalToConstant: 47),
-            
+
             timeLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor,constant: -110),
             timeLabel.heightAnchor.constraint(equalToConstant: 47),
-            timeLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor,constant: 10),
+            timeLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor,constant: 0),
             
             tempLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor,constant: 0),
             tempLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor,constant: 0),
@@ -72,28 +59,11 @@ class ForecastCollectionViewCell: UICollectionViewCell {
         
     }
     
-    //MARK: - Cell Config
     func congifContent(forecastDTO:ForecastDTO){
-        var date: String = ""
-        date += formateDate(date: forecastDTO.date)
-        self.dateLabel.text = date
         self.timeLabel.text = forecastDTO.time
         self.tempLabel.text = forecastDTO.temp
-        //        self.weatherTypeImageView.kf.setImage(with: forecastDTO.getURL())
         let getImgName = forecastDTO.icon
         self.weatherTypeImageView.image = UIImage(named: getImage(icon: getImgName))
-    }
-    
-    func formateDate(date: String) -> String {
-        let dateString = date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        
-        if let date = dateFormatter.date(from: dateString) {
-            dateFormatter.dateFormat = "dd-MM-yyyy"
-            return dateFormatter.string(from: date)
-        }
-        return "13-10-2023"
     }
 }
 

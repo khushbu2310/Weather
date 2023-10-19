@@ -9,96 +9,107 @@ import Foundation
 
 class SearchWeatherVM {
     
-    //MARK: - Properties
     var repository : Repository
-    var coreRepository : CDWeatherRepository
-    var searchResults : [CurrentWeatherDTO]
+    var coreRepository : CoreRepo
+    var searchResults : [CurrentWeatherDTO] = []
     var eventHandler: ((_ event: Event) -> Void)?
     
-    //MARK: - Init
-    init(_repository:Repository = WeatherRepository(),
-         _searchResults:[CurrentWeatherDTO] = [],
-         _coreReporitory:CDWeatherRepository = CDWeatherRepository(managedObjectContext: PersistentStorage.shared.mainContext)){
+    init(_repository: Repository = WeatherRepository(),
+         _coreReporitory: CoreRepo = CDWeatherRepository()){
         repository = _repository
-        searchResults = _searchResults
         coreRepository = _coreReporitory
     }
     
-    //MARK: - Methods
-    
     func getAllCity(){
-        self.searchResults = self.coreRepository.getList()
-        
-    }
-    func checkDublicate(city: String)->Int?{
-        if let index = self.searchResults.firstIndex(where: { $0.city == city}) {
-            return index
+        let response = coreRepository.getList()
+        switch response {
+        case .success(let data) : self.searchResults = data
         }
-        return nil
-        
     }
+    
     func getCityLocation(city: String){
         self.eventHandler?(.loading)
-        //       Dublicate Check
-        if let index = checkDublicate(city: city) {
-            //            Find weather with locations
-            self.getWeather(location: LocationModel(lat: self.searchResults[index].lat, lon: self.searchResults[index].lon),index: index, searchText: city)
+        if searchResults.contains(where: { $0.city == city }) {
+            self.eventHandler?(.stopLoading)
+            self.eventHandler?(.error("Aleardy exist"))
         }
         else{
-            //          Search location
-            repository.getCityLocation(city: city) { location, errorMessage in
-                self.eventHandler?(.stopLoading)
-                guard let cityLocation = location else {
+            repository.getCityLocation(city: city) { result in
+                switch result {
+                case .success(let data) :
+                    self.getWeather(location: data, index: nil)
+                case .failure(let error) :
                     self.eventHandler?(.stopLoading)
-                    self.eventHandler?(.error(errorMessage ?? ""))
-                    return
+                    self.eventHandler?(.error(error.rawValue))
                 }
-                //                after searching get weather data
-                self.getWeather(location: cityLocation, index: nil,searchText: city)
             }
         }
     }
     
-    func getWeather(location: LocationModel, index: Int?,searchText:String){
-        self.eventHandler?(.loading)
-        self.repository.getCurrentWeather(location: location) { currentWeatherDTO, errorMessage in
+    func getWeather(location: LocationModel, index: Int?){
+        repository.getCurrentWeather(location: location) { result in
             self.eventHandler?(.stopLoading)
-            guard let currentWeatherDTO = currentWeatherDTO else {
-                
-                self.eventHandler?(.error(errorMessage ?? ""))
-                return
-            }
-            if currentWeatherDTO.city == searchText {
-                self.eventHandler?(.dataLoaded)
-                //          if city exists update its weather
-                if let index = index {
-                    let response = self.coreRepository.update(currentWeatherDTO: currentWeatherDTO)
-                    if response.isUpdate {
-                        self.searchResults[index] = currentWeatherDTO
+            switch result {
+            case .success(let data) :
+                let response = self.coreRepository.create(currentWeatherDTO: data)
+                switch response {
+                case .success(let ans) :
+                    if ans == true {
+                        self.searchResults.insert(data, at: 0)
                         self.eventHandler?(.dataLoaded)
                     }
-                    else{
-                        self.eventHandler?(.error(response.errorMessage))
-                    }
+                case .failure(let coreError) :
+                    self.eventHandler?(.error(coreError.rawValue))
                 }
-                else{
-                    let response = self.coreRepository.create(currentWeatherDTO: currentWeatherDTO)
-                    if response.isSaved {
-                        self.searchResults.insert(currentWeatherDTO, at: 0)
-                        self.eventHandler?(.dataLoaded)
-                    }
-                    else{
-                        self.eventHandler?(.error(response.errorMessage))
-                    }
-                }
-            }
-            else{
-                self.eventHandler?(.error("City not found"))
+            case .failure(let error) :
+                self.eventHandler?(.error(error.rawValue))
             }
         }
     }
     
+    func update(index: Int){
+        self.eventHandler?(.loading)
+        if index < searchResults.count {
+            let data = searchResults[index]
+            repository.getCurrentWeather(location: LocationModel(lat: data.lat, lon: data.lon)) { result in
+                switch result {
+                case .success(let data) :
+                    let res = self.coreRepository.update(currentWeatherDTO: data)
+                    self.eventHandler?(.stopLoading)
+                    switch res {
+                    case .success(let ans) :
+                        if ans {
+                            self.searchResults[index] = data
+                            self.eventHandler?(.dataLoaded)
+                        }
+                    case .failure(let error) :
+                        self.eventHandler?(.error(error.rawValue))
+                    }
+                case .failure(let error) :
+                    self.eventHandler?(.stopLoading)
+                    self.eventHandler?(.error(error.rawValue))
+                }
+            }
+        }
+        
+    }
+    
+    func deleteRecord(index:Int){
+        if index < searchResults.count {
+            let response = coreRepository.delete(city: searchResults[index].city)
+            switch response {
+            case .success(let res) :
+                if res {
+                    self.searchResults.remove(at: index)
+                    self.eventHandler?(.dataLoaded)
+                }
+            case .failure(let error) :
+                self.eventHandler?(.error(error.rawValue))
+            }
+        }
+    }
 }
+
 extension SearchWeatherVM {
     enum Event {
         case loading

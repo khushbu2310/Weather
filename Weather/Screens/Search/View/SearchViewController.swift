@@ -8,23 +8,25 @@
 import Foundation
 import UIKit
 
+
 class SearchViewController: UIViewController {
-    //MARK: - Properties
+
     private var searchWeatherVM = SearchWeatherVM()
     
-    //MARK: - UIComponents
     private var weatherSearchBar: UISearchBar!
     private var searchResultView: UICollectionView!
     private var activityIndicator: UIActivityIndicatorView!
     
-    //MARK: - Initializer
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 0.51, green: 0.549, blue: 0.682, alpha: 1)
-        searchWeatherVM.getAllCity()
         setupUI()
         observeEvent()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        searchWeatherVM.getAllCity()
+        self.configContent()
     }
     
     private  func setupUI() {
@@ -122,7 +124,6 @@ class SearchViewController: UIViewController {
         ])
     }
     
-    //MARK: - ObserveEvent
     private func observeEvent() {
         searchWeatherVM.eventHandler = { [weak self] event in
             guard let self else { return }
@@ -147,17 +148,47 @@ class SearchViewController: UIViewController {
     private func configContent() {
         self.searchResultView.reloadData()
     }
-    
 }
 
 //MARK: - SearchBar Delegate
-
-extension SearchViewController : UISearchBarDelegate {
+extension SearchViewController: UISearchBarDelegate {
+    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if let city = searchBar.text?.trimmingCharacters(in: .whitespaces) {
             searchWeatherVM.getCityLocation(city: city)
-            searchBar.text = ""
+            searchBar.text?.removeAll()
         }
+    }
+}
+
+// MARK: - CollectionView Delegate
+extension SearchViewController : UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath){
+        
+        let dialogMessage = UIAlertController(title: "Actions", message: "\(self.searchWeatherVM.searchResults[indexPath.row].city)", preferredStyle: .alert)
+
+        let Move = UIAlertAction(title: "View Details", style: .default, handler: { (action) -> Void in
+            let data = self.searchWeatherVM.searchResults[indexPath.row]
+            NotificationCenter.default.post(name: NSNotification.Name("LocationSelected"), object: data)
+            self.tabBarController?.selectedIndex = 0
+        })
+
+        let Delete = UIAlertAction(title: "Delete", style: .destructive) { (action) -> Void in
+            self.searchWeatherVM.deleteRecord(index: indexPath.row)
+        }
+        
+        let Update = UIAlertAction(title: "Refresh", style: .default) { action in
+            self.searchWeatherVM.update(index: indexPath.row)
+        }
+        
+        let Cancel = UIAlertAction(title: "Cancel", style: .cancel) { (action) -> Void in }
+    
+        dialogMessage.addAction(Update)
+        dialogMessage.addAction(Move)
+        dialogMessage.addAction(Delete)
+        dialogMessage.addAction(Cancel)
+        self.present(dialogMessage, animated: true)
     }
 }
 
@@ -168,17 +199,18 @@ extension SearchViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchViewCollectionViewCell.identifire, for: indexPath) as! SearchViewCollectionViewCell
-        cell.configContent(currentWeatherDTO: searchWeatherVM.searchResults[indexPath.row])
+        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchViewCollectionViewCell.identifire, for: indexPath) as? SearchViewCollectionViewCell
+        else{
+            return UICollectionViewCell()
+        }
+        
+        switch indexPath.row {
+        case 0 :  cell.configContent(currentWeatherDTO: searchWeatherVM.searchResults[indexPath.row],cellBGC: ColorConstant.lightBlue,cellTextColor: ColorConstant.frontWhite)
+        default :  cell.configContent(currentWeatherDTO: searchWeatherVM.searchResults[indexPath.row],cellBGC: ColorConstant.frontWhite,cellTextColor: ColorConstant.black)
+        }
         return cell
+
     }
 }
 
-//TODO: - CollectionView Delegate
-extension SearchViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let data = searchWeatherVM.searchResults[indexPath.row]
-        self.tabBarController?.selectedIndex = 0
-        NotificationCenter.default.post(name: NSNotification.Name("LocationSelected"), object: data)
-    }
-}

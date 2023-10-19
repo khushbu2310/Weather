@@ -11,5 +11,6 @@ import CoreData
 
 @objc(CDCurrentWeather)
 public class CDCurrentWeather: NSManagedObject {
-
+    
 }
+

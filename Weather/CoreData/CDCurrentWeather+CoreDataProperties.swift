@@ -11,11 +11,11 @@ import CoreData
 
 
 extension CDCurrentWeather {
-
+    
     @nonobjc public class func fetchRequest() -> NSFetchRequest<CDCurrentWeather> {
         return NSFetchRequest<CDCurrentWeather>(entityName: "CDCurrentWeather")
     }
-
+    
     @NSManaged public var city: String?
     @NSManaged public var date: String?
     @NSManaged public var humidity: String?
@@ -25,9 +25,8 @@ extension CDCurrentWeather {
     @NSManaged public var temp: String?
     @NSManaged public var weatherType: String?
     @NSManaged public var wind: String?
-
+    
 }
 
 extension CDCurrentWeather : Identifiable {
-
 }

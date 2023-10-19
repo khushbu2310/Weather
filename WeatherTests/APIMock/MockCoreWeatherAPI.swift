@@ -35,6 +35,5 @@ class MockCoreWeatherAPI: CoreRepo {
     func delete(city: String) -> Result<Bool, Weather.CoreRepoError> {
         return boolResult
     }
-    
-    
+
 }
